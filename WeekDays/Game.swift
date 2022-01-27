@@ -79,9 +79,13 @@ class Game: ObservableObject {
   private func incrementScore(by value: Int) {
     self.score += value
     
-    if score > Game.highScore {
-      Game.highScore = score
-      self.highScore = score
-    }
+    updateHighScore()
+  }
+
+  private func updateHighScore() {
+    guard score > Game.highScore else { return }
+
+    Game.highScore = score
+    self.highScore = score
   }
 }

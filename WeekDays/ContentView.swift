@@ -34,20 +34,23 @@ struct ContentView: View {
       Spacer()
 
       Button(
-        action: { confirmationShown = true }
-      ) {
+        action: {
+          guard state == .lose else {
+            confirmationShown = true
+            return
+          }
+          game.restart()
+        }) {
         Text("Restart").font(.title3)
       }
     }
     .padding(.horizontal)
-    .confirmationDialog("Are you sure?",
-                        isPresented: $confirmationShown,
-                        titleVisibility: .visible) {
-      Button("Yes", role: .destructive) {
+    .confirmationDialog("Please confirm", isPresented: $confirmationShown) {
+      Button("Restart Game", role: .destructive) {
         game.restart()
       }
 
-      Button("No", role: .cancel) {}
+      Button("Cancel", role: .cancel) {}
     }
   }
 
@@ -103,8 +106,11 @@ struct ContentView: View {
 }
 
 struct ContentView_Previews: PreviewProvider {
+  @State static var confirmationShown = true
   static var lostGame = Game()
   static var winGame = Game()
+  static var game = Game()
+
   static var previews: some View {
     lostGame.tryWith(weekDay: "foo")
     winGame.tryWith(weekDay: winGame.currentWeekDay)
@@ -116,6 +122,8 @@ struct ContentView_Previews: PreviewProvider {
       ContentView()
         .environmentObject(winGame)
 
+      ContentView(confirmationShown: confirmationShown)
+        .environmentObject(game)
     }
   }
 }
