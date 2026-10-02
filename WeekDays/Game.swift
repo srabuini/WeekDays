@@ -6,86 +6,78 @@
 //
 
 import Foundation
-import SwiftUI
 import Combine
 
-class Game: ObservableObject {
+final class Game: ObservableObject {
   enum State {
     case playing
     case win
     case lose
   }
-  
-  static let userDefaults = UserDefaults.standard
-  static var highScore: Int {
-    get {
-      if let highScore = userDefaults.value(forKey: "highScore") {
-        return highScore as! Int
-      } else {
-        return 0
-      }
-    }
-    
-    set {
-      userDefaults.setValue(newValue, forKey: "highScore")
-    }
+
+  private static let highScoreKey = "highScore"
+  private static let userDefaults = UserDefaults.standard
+  private static let weekDayFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "EEEE"
+    return formatter
+  }()
+
+  static var persistedHighScore: Int {
+    get { userDefaults.integer(forKey: highScoreKey) }
+    set { userDefaults.set(newValue, forKey: highScoreKey) }
   }
-  
-  static var date: Date {
+
+  static var randomDateInCurrentYear: Date {
     let calendar = Calendar.current
     let year = calendar.component(.year, from: Date())
     let from = DateComponents(calendar: calendar, year: year, month: 1, day: 1).date!
     let to = DateComponents(calendar: calendar, year: year, month: 12, day: 31).date!
-
     return Date.randomBetween(start: from, end: to)
   }
-  
+
   @Published var highScore: Int
   @Published var score: Int
   @Published var date: Date
   @Published var state: State
-  
+
   var currentWeekDay: String {
-    let dateFormatter = DateFormatter()
-    dateFormatter.dateFormat = "EEEE"
-    
-    return dateFormatter.string(from: date)
+    Self.weekDayFormatter.string(from: date)
   }
-  
+
   init() {
-    self.highScore = Self.highScore
-    self.date = Self.date
-    self.score = 0
-    self.state = .playing
+    highScore = Self.persistedHighScore
+    date = Self.randomDateInCurrentYear
+    score = 0
+    state = .playing
   }
-  
+
   func tryWith(weekDay: String) {
     if weekDay == currentWeekDay {
       incrementScore(by: 1)
       state = .win
-      self.date = Self.date
+      date = Self.randomDateInCurrentYear
     } else {
       state = .lose
     }
   }
-  
+
   func restart() {
-    self.highScore = Self.highScore
-    self.date = Self.date
-    self.score = 0
-    self.state = .playing
+    highScore = Self.persistedHighScore
+    date = Self.randomDateInCurrentYear
+    score = 0
+    state = .playing
   }
-  
+
   private func incrementScore(by value: Int) {
-    self.score += value
-    
+    score += value
     updateHighScore()
   }
 
   private func updateHighScore() {
-    guard score > Game.highScore else { return }
-
-    Game.highScore = score
-    self.highScore = score
+    guard score > Self.persistedHighScore else { return }
+    Self.persistedHighScore = score
+    highScore = score
   }
 }
+

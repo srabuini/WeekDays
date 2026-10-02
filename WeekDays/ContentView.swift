@@ -8,8 +8,12 @@
 import SwiftUI
 
 struct ContentView: View {
-  @EnvironmentObject var game: Game
-  @State var confirmationShown = false
+  @EnvironmentObject private var game: Game
+  @State private var confirmationShown = false
+
+  init(confirmationShown: Bool = false) {
+    self._confirmationShown = State(initialValue: confirmationShown)
+  }
 
   var body: some View {
     VStack(spacing: 20) {
@@ -54,20 +58,20 @@ struct ContentView: View {
     }
   }
 
-  var date: String {
+  private var date: String {
     DateFormatter
       .localizedString(from: game.date, dateStyle: .medium, timeStyle: .none)
   }
 
-  var score: Int {
+  private var score: Int {
     game.score
   }
 
-  var highScore: Int {
+  private var highScore: Int {
     game.highScore
   }
 
-  var state: Game.State {
+  private var state: Game.State {
     game.state
   }
 
@@ -92,38 +96,49 @@ struct ContentView: View {
     }
   }
 
-  private func daysList() ->  some View {
-    ForEach(Calendar.current.weekdaySymbols, id: \.self) { day in
-      Button {
-        game.tryWith(weekDay: day)
-      } label: {
-        Text(day).font(.title2)
+  private func daysList() -> some View {
+    VStack(spacing: 8) {
+      ForEach(Calendar.current.weekdaySymbols, id: \.self) { day in
+        Button {
+          game.tryWith(weekDay: day)
+        } label: {
+          Text(day).font(.title2)
+        }
+        .disabled(disabled)
+        .foregroundColor(dayColor(for: day))
       }
-      .disabled(disabled)
-      .foregroundColor(dayColor(for: day))
     }
   }
 }
 
-struct ContentView_Previews: PreviewProvider {
-  @State static var confirmationShown = true
-  static var lostGame = Game()
-  static var winGame = Game()
-  static var game = Game()
 
-  static var previews: some View {
-    lostGame.tryWith(weekDay: "foo")
-    winGame.tryWith(weekDay: winGame.currentWeekDay)
-
-    return Group {
-      ContentView()
-        .environmentObject(lostGame)
-
-      ContentView()
-        .environmentObject(winGame)
-
-      ContentView(confirmationShown: confirmationShown)
-        .environmentObject(game)
-    }
+private enum ContentView_Previews {
+  static func lost() -> Game {
+    let game = Game()
+    game.tryWith(weekDay: "")
+    return game
   }
+
+  static func win() -> Game {
+    let game = Game()
+    game.tryWith(weekDay: game.currentWeekDay)
+    return game
+  }
+
+  static func fresh() -> Game { Game() }
+}
+
+#Preview("Lost Game") {
+  ContentView()
+    .environmentObject(ContentView_Previews.lost())
+}
+
+#Preview("Win Game") {
+  ContentView()
+    .environmentObject(ContentView_Previews.win())
+}
+
+#Preview("Confirmation Dialog") {
+  ContentView(confirmationShown: true)
+    .environmentObject(ContentView_Previews.fresh())
 }

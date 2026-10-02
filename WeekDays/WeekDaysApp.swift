@@ -10,6 +10,7 @@ import SwiftUI
 @main
 struct WeekDaysApp: App {
   @StateObject private var game = Game()
+
   var body: some Scene {
     WindowGroup {
       ContentView()
