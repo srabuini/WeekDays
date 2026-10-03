@@ -9,10 +9,10 @@ import SwiftUI
 
 struct ContentView: View {
   @EnvironmentObject private var game: Game
-  @State private var confirmationShown = false
+  @State private var isConfirmationPresented = false
 
-  init(confirmationShown: Bool = false) {
-    self._confirmationShown = State(initialValue: confirmationShown)
+  init(isConfirmationPresented: Bool = false) {
+    self._isConfirmationPresented = State(initialValue: isConfirmationPresented)
   }
 
   var body: some View {
@@ -24,7 +24,7 @@ struct ContentView: View {
         Text("Score: \(score)")
       }
 
-      Text(date).font(.title)
+      Text(formattedDate).font(.title)
 
       Spacer()
 
@@ -32,7 +32,7 @@ struct ContentView: View {
 
       Spacer()
 
-      currentResult()
+      currentResult
         .font(.largeTitle)
 
       Spacer()
@@ -40,7 +40,7 @@ struct ContentView: View {
       Button(
         action: {
           guard state == .lose else {
-            confirmationShown = true
+              isConfirmationPresented = true
             return
           }
           game.restart()
@@ -49,7 +49,7 @@ struct ContentView: View {
       }
     }
     .padding(.horizontal)
-    .confirmationDialog("Please confirm", isPresented: $confirmationShown) {
+    .confirmationDialog("Please confirm", isPresented: $isConfirmationPresented) {
       Button("Restart Game", role: .destructive) {
         game.restart()
       }
@@ -58,7 +58,7 @@ struct ContentView: View {
     }
   }
 
-  private var date: String {
+  private var formattedDate: String {
     DateFormatter
       .localizedString(from: game.date, dateStyle: .medium, timeStyle: .none)
   }
@@ -75,17 +75,17 @@ struct ContentView: View {
     game.state
   }
 
-  private var disabled: Bool {
+  private var isDisabled: Bool {
     state == .lose
   }
 
   private func dayColor(for day: String) -> Color {
     guard state == .lose else { return .blue }
 
-    return day == game.currentWeekDay ? .red : .gray
+    return day == game.currentWeekday ? .red : .gray
   }
 
-  private func currentResult() -> some View {
+  private var currentResult: some View {
     switch state {
     case .win:
       return Text("😃")
@@ -100,11 +100,11 @@ struct ContentView: View {
     VStack(spacing: 8) {
       ForEach(Calendar.current.weekdaySymbols, id: \.self) { day in
         Button {
-          game.tryWith(weekDay: day)
+          game.guess(weekday: day)
         } label: {
           Text(day).font(.title2)
         }
-        .disabled(disabled)
+        .disabled(isDisabled)
         .foregroundColor(dayColor(for: day))
       }
     }
@@ -115,13 +115,13 @@ struct ContentView: View {
 private enum ContentView_Previews {
   static func lost() -> Game {
     let game = Game()
-    game.tryWith(weekDay: "")
+    game.guess(weekday: "")
     return game
   }
 
   static func win() -> Game {
     let game = Game()
-    game.tryWith(weekDay: game.currentWeekDay)
+    game.guess(weekday: game.currentWeekday)
     return game
   }
 
@@ -139,6 +139,7 @@ private enum ContentView_Previews {
 }
 
 #Preview("Confirmation Dialog") {
-  ContentView(confirmationShown: true)
+  ContentView(isConfirmationPresented: true)
     .environmentObject(ContentView_Previews.fresh())
 }
+

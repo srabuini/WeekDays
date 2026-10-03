@@ -41,7 +41,7 @@ final class Game: ObservableObject {
   @Published var date: Date
   @Published var state: State
 
-  var currentWeekDay: String {
+  var currentWeekday: String {
     Self.weekDayFormatter.string(from: date)
   }
 
@@ -52,8 +52,8 @@ final class Game: ObservableObject {
     state = .playing
   }
 
-  func tryWith(weekDay: String) {
-    if weekDay == currentWeekDay {
+  func guess(weekday: String) {
+    if weekday == currentWeekday {
       incrementScore(by: 1)
       state = .win
       date = Self.randomDateInCurrentYear
